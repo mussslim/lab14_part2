@@ -121,5 +121,32 @@ if __name__ == '__main__':
     #   assert par_result == seq_result, "Результаты не совпадают!"
 
     # --- Ваш код здесь ---
+from multiprocessing import Pool
+import time
 
+def compute_element(i, j, A, B):
+    return (i, j, sum(A[i][k] * B[k][j] for k in range(len(A[0]))))
+
+def multiply_pool(A, B, processes):
+    rows, cols = len(A), len(B[0])
+    args = [(i, j, A, B) for i in range(rows) for j in range(cols)]
+
+    with Pool(processes=processes) as pool:
+        results = pool.starmap(compute_element, args)
+
+    result = [[0]*cols for _ in range(rows)]
+    for i, j, val in results:
+        result[i][j] = val
+
+    return result
+
+if __name__ == "__main__":
+    A = [[1, 2], [3, 4]]
+    B = [[5, 6], [7, 8]]
+
+    for p in [1, 2, 4]:
+        t0 = time.time()
+        res = multiply_pool(A, B, p)
+        t1 = time.time()
+        print(f"Processes={p}, time={t1 - t0:.4f}")
     # --- Конец вашего кода ---

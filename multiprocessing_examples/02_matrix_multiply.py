@@ -163,5 +163,61 @@ if __name__ == '__main__':
     #   print(f"Ускорение: {time_seq / time_par:.2f}x")
 
     # --- Ваш код здесь ---
+from multiprocessing import Process, Queue
+import time
+
+def compute_element(i, j, A, B, q):
+    result = sum(A[i][k] * B[k][j] for k in range(len(A[0])))
+    q.put((i, j, result))
+
+def multiply_parallel(A, B):
+    rows, cols = len(A), len(B[0])
+    q = Queue()
+    processes = []
+
+    for i in range(rows):
+        for j in range(cols):
+            p = Process(target=compute_element, args=(i, j, A, B, q))
+            processes.append(p)
+            p.start()
+
+    for p in processes:
+        p.join()
+
+    result = [[0]*cols for _ in range(rows)]
+    while not q.empty():
+        i, j, val = q.get()
+        result[i][j] = val
+
+    return result
+
+def multiply_sequential(A, B):
+    rows, cols = len(A), len(B[0])
+    result = [[0]*cols for _ in range(rows)]
+
+    for i in range(rows):
+        for j in range(cols):
+            result[i][j] = sum(A[i][k] * B[k][j] for k in range(len(A[0])))
+
+    return result
+
+if __name__ == "__main__":
+    A = [[1, 2], [3, 4]]
+    B = [[5, 6], [7, 8]]
+
+    t0 = time.time()
+    seq = multiply_sequential(A, B)
+    t1 = time.time()
+
+    t2 = time.time()
+    par = multiply_parallel(A, B)
+    t3 = time.time()
+
+    print("Sequential:", seq)
+    print("Parallel:", par)
+
+    print(f"Sequential time: {t1 - t0:.4f}")
+    print(f"Parallel time: {t3 - t2:.4f}")
+
 
     # --- Конец вашего кода ---

@@ -93,6 +93,43 @@ def handle_client(conn, addr):
 
     # --- Ваш код здесь ---
     pass
+import socket
+from multiprocessing import Process
+import os
+
+def handle_client(conn, addr):
+    print(f"[PID {os.getpid()}] Connected: {addr}")
+
+    while True:
+        data = conn.recv(1024)
+        if not data:
+            break
+
+        message = data.decode()
+        print(f"[PID {os.getpid()}] Received: {message}")
+
+        conn.sendall(data)
+
+        if message == "exit":
+            break
+
+    conn.close()
+    print(f"[PID {os.getpid()}] Closed: {addr}")
+
+def main():
+    server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    server.bind(("0.0.0.0", 4444))
+    server.listen()
+
+    print("Multiprocessing server running...")
+
+    while True:
+        conn, addr = server.accept()
+        p = Process(target=handle_client, args=(conn, addr))
+        p.start()
+
+if __name__ == "__main__":
+    main()
     # --- Конец вашего кода ---
 
 
